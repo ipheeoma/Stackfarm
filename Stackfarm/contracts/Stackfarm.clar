@@ -9,11 +9,13 @@
 (define-constant ERR-INSUFFICIENT-BALANCE (err u2))
 (define-constant ERR-UNAUTHORIZED (err u403))
 (define-constant ERR-INVALID-AMOUNT (err u404))
+(define-constant ERR-INVALID-RATE (err u405))
 
 ;; Farm Pool Contract
 (define-data-var total-allocated-rewards uint u0)
 (define-data-var reward-rate uint u10)  ;; 10 tokens per block as base reward
 (define-data-var total-staked uint u0)
+(define-constant MAX-REWARD-RATE u1000)  ;; Define a maximum reward rate
 
 ;; Staking Mapping
 (define-map user-stakes 
@@ -41,7 +43,7 @@
       (sender tx-sender)
       (current-block stacks-block-height)
     )
-      ;; Attempt to transfer tokens - fixed the error here
+      ;; Attempt to transfer tokens
       (try! (ft-transfer? yield-token amount sender (as-contract tx-sender)))
       
       ;; Update total staked amount
@@ -141,7 +143,13 @@
 ;; Admin function to update reward rate
 (define-public (update-reward-rate (new-rate uint))
   (begin
+    ;; Verify caller is contract owner
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-UNAUTHORIZED)
+    
+    ;; Validate the new rate is within acceptable bounds
+    (asserts! (and (> new-rate u0) (<= new-rate MAX-REWARD-RATE)) ERR-INVALID-RATE)
+    
+    ;; Update the reward rate
     (var-set reward-rate new-rate)
     (ok true)
   )
