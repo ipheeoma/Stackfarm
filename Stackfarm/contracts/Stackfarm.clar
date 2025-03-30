@@ -1,3 +1,4 @@
+;; Stacks Automated Yield Farming
 ;; Yield Farming Token Contract with Multiple Pools and Emergency Withdrawal
 (define-fungible-token yield-token)
 (define-constant CONTRACT-OWNER tx-sender)
